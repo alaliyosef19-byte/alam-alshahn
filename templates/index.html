@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متجر عالم الشحن | Alam Elshahn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --dark-bg: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+        }
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+        .navbar {
+            background-color: #1f1f1f !important;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .hero-banner {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a4baf 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .product-card {
+            background-color: var(--card-bg);
+            border: 1px solid #2d2d2d;
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            overflow: hidden;
+            height: 100%;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(13, 110, 253, 0.3);
+        }
+        .product-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        .btn-buy {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            width: 100%;
+        }
+        .btn-buy:hover {
+            background-color: #0b5ed7;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- القائمة العلوية -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-4" href="#"><i class="fa-solid fa-bolt text-warning me-2"></i>عالم الشحن</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- البانر الترحيبي -->
+        <div class="hero-banner shadow-lg">
+            <h1 class="fw-bold">مرحباً بك في متجر عالم الشحن</h1>
+            <p class="mb-0">أسرع وأضمن منصة لشحن البطاقات والألعاب أونلاين</p>
+        </div>
+
+        <!-- قسم المنتجات (شبكي Responsive Grid) -->
+        <h3 class="mt-5 mb-4 text-center fw-bold"><i class="fa-solid fa-gamepad text-primary me-2"></i>الخدمات والبطاقات المتاحة</h3>
+        
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="products-container">
+            <!-- سيتم تحميل المنتجات تلقائياً عبر الـ API أو عرض بطاقات افتراضية -->
+            <div class="col">
+                <div class="product-card p-3 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="fa-solid fa-mobile-screen product-icon"></i>
+                        <h5 class="fw-bold">شدات ببجي PUBG</h5>
+                        <p class="text-muted small">شحن فوري عبر الأيدي (ID)</p>
+                    </div>
+                    <button class="btn btn-buy py-2 mt-3"><i class="fa-solid fa-cart-shopping me-1"></i> طلب الآن</button>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="product-card p-3 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="fa-solid fa-fire product-icon text-danger"></i>
+                        <h5 class="fw-bold">جواهر فري فاير</h5>
+                        <p class="text-muted small">شحن مباشر وسريع</p>
+                    </div>
+                    <button class="btn btn-buy py-2 mt-3"><i class="fa-solid fa-cart-shopping me-1"></i> طلب الآن</button>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="product-card p-3 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="fa-brands fa-google-play product-icon text-success"></i>
+                        <h5 class="fw-bold">بطاقات جوجل بلاي</h5>
+                        <p class="text-muted small">أكواد استلام فورية</p>
+                    </div>
+                    <button class="btn btn-buy py-2 mt-3"><i class="fa-solid fa-cart-shopping me-1"></i> طلب الآن</button>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="product-card p-3 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="fa-brands fa-apple product-icon text-light"></i>
+                        <h5 class="fw-bold">بطاقات آيتونز iTunes</h5>
+                        <p class="text-muted small">جميع الفئات المتوفرة</p>
+                    </div>
+                    <button class="btn btn-buy py-2 mt-3"><i class="fa-solid fa-cart-shopping me-1"></i> طلب الآن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
