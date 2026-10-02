@@ -250,7 +250,10 @@ def apps():
 
         # ===== الألعاب =====
         fixed_games=[
-            ("PUBG","PUBG MOBILE"),
+            ("PUBG GLOBAL","PUBG GLOBAL"),
+            ("PUBG MOBILE GLOBAL","PUBG GLOBAL"),
+            ("PUBG GLOBAL OTOMATIK","PUBG GLOBAL"),
+            ("PUBG MOBILE","PUBG MOBILE"),
             ("FREE FIRE","FREE FIRE"),
             ("CALL OF DUTY","CALL OF DUTY MOBILE"),
             ("CODM","CALL OF DUTY MOBILE"),

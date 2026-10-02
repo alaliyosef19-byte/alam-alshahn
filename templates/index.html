@@ -249,12 +249,7 @@ async function logout(){
 }
 
 async function loadProducts(){
- try{
-  const x=await api("/api/products?limit=100");
-  allProducts=Array.isArray(x)?x:(x.products||[]);
- }catch(e){
   allProducts=[];
- }
 }
 
 function matchProduct(p,keys){
