@@ -286,7 +286,7 @@ async function openSection(name){
          ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
        </div>
        <b>${esc(app.name)}</b>
-       <button onclick="showPackages(${Number(app.products?.[0]?.id||0)}, '${String(app.name).replace(/'/g,"\\'")}')">عرض الباقات</button>
+       <button onclick='showPackages(${JSON.stringify((app.products||[]).map(x=>Number(x.id)).filter(Boolean))}, ${JSON.stringify(app.name||"")})'>عرض الباقات</button>
      </div>
    `).join("");
 
@@ -317,7 +317,7 @@ async function loadMoreApps(section,offset){
          ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
        </div>
        <b>${esc(app.name)}</b>
-       <button onclick="showPackages('${String(app.name).replace(/\\'/g,"\\\\'")}')">عرض الباقات</button>
+       <button onclick='showPackages(${JSON.stringify((app.products||[]).map(x=>Number(x.id)).filter(Boolean))}, ${JSON.stringify(app.name||"")})'>عرض الباقات</button>
      </div>
    `).join(""));
 
@@ -334,9 +334,10 @@ async function loadMoreApps(section,offset){
  }
 }
 
-async function showPackages(productId,name){
+async function showPackages(productIds,name){
   currentApp=name;
   hideAll();
+
   document.getElementById("packages").classList.remove("hidden");
   document.getElementById("packagesTitle").textContent=name;
 
@@ -344,8 +345,17 @@ async function showPackages(productId,name){
   list.innerHTML="<div class='sub'>جاري تحميل الباقات...</div>";
 
   try{
-    const d=await api("/api/packages/"+Number(productId));
-    const ps=d && Array.isArray(d.packages) ? d.packages : [];
+    const ids=Array.isArray(productIds) ? productIds : [Number(productIds)];
+
+    const details=await Promise.all(
+      ids.filter(Boolean).map(id =>
+        api("/api/packages/"+Number(id)).catch(()=>null)
+      )
+    );
+
+    const ps=details.flatMap(x =>
+      x && Array.isArray(x.packages) ? x.packages : []
+    );
 
     if(!ps.length){
       list.innerHTML="<div class='sub'>لا توجد باقات لهذا التطبيق.</div>";
@@ -355,9 +365,7 @@ async function showPackages(productId,name){
     list.innerHTML=ps.map(p=>`
       <div class="package">
         <b>${esc(p.name)}</b>
-        <div class="price">
-          ${Number(p.store_price??p.price??0).toFixed(2)} $
-        </div>
+        <div class="price">${Number(p.store_price??p.price??0).toFixed(2)} $</div>
         <button onclick="buy(${Number(p.id)})">شراء</button>
       </div>
     `).join("");
