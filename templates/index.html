@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>عالم الشحن</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0d0920;color:#fff;font-family:Arial,sans-serif;padding-bottom:82px}
+.top{padding:14px 15px;background:#17102f;border-bottom:1px solid #35205f;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{font-size:21px;font-weight:900;color:#b995ff}
+.balance{background:#24164a;border:1px solid #6846a8;border-radius:12px;padding:8px 12px;font-weight:bold}
+.login{background:#7c3aed;color:#fff;border:0;border-radius:10px;padding:9px 13px;font-weight:bold}
+.container{padding:18px 14px}
+h1{font-size:23px;margin:8px 0}
+.sub{color:#aaa;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.card{background:#17112d;border:1px solid #34215b;border-radius:16px;padding:18px 10px;text-align:center;min-height:125px}
+.icon{font-size:38px;margin-bottom:9px}
+.card b{display:block;font-size:15px}
+.card button,.package button{margin-top:12px;background:#7c3aed;color:#fff;border:0;border-radius:10px;padding:9px 13px;font-weight:bold}
+.hidden{display:none!important}
+.back{background:#24164a;border:1px solid #4a3278;color:#fff;border-radius:10px;padding:9px 14px;margin-bottom:15px}
+.items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.package{background:#17112d;border:1px solid #34215b;border-radius:15px;padding:14px}
+.package .price{color:#b995ff;font-size:18px;font-weight:bold;margin-top:8px}
+.bottom{position:fixed;z-index:9999;bottom:0;left:0;right:0;height:68px;background:#17102f;border-top:1px solid #49317a;display:flex;justify-content:space-around;align-items:center}
+.bottom button{background:none;border:0;color:#fff;font-size:12px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.bottom span{font-size:21px}
+.modal{position:fixed;inset:0;background:#000b;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px}
+.box{width:100%;max-width:430px;background:#17112d;border:1px solid #5a3b91;border-radius:18px;padding:20px}
+.box input,.box textarea{width:100%;margin:7px 0;padding:12px;border-radius:10px;border:1px solid #49316f;background:#0e0920;color:#fff}
+.box button{padding:11px 15px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font-weight:bold;margin-top:8px}
+.close{float:left;background:#332052!important}
+.sham{background:#24164a;border:1px solid #6544a2;border-radius:12px;padding:13px;line-height:2}
+@media(min-width:700px){.grid{grid-template-columns:repeat(5,1fr)}.items{grid-template-columns:repeat(3,1fr)}}
+
+.app-image{
+  width:100%;
+  height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:14px;
+  margin-bottom:10px;
+  background:rgba(255,255,255,.05);
+}
+.app-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.no-image{
+  font-size:42px;
+  opacity:.5;
+}
+
+.app-card{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:12px;
+  margin:10px 0;
+  border-radius:18px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.10);
+  box-sizing:border-box;
+  overflow:hidden;
+}
+.app-card b{
+  display:block;
+  text-align:center;
+  font-size:16px;
+  line-height:1.4;
+}
+.app-card button{
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:11px 14px;
+  cursor:pointer;
+}
+.app-image{
+  width:100%;
+  height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:14px;
+  background:rgba(255,255,255,.05);
+}
+.app-image img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.no-image{
+  font-size:42px;
+  opacity:.5;
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="logo">عالم الشحن</div>
+  <div class="balance">
+الرصيد: <span id="balance">0.00$</span>
+<span id="usernameTop" style="margin-right:8px"></span>
+</div>
+<button id="loginBtn" class="login" onclick="openLogin()">تسجيل الدخول</button>
+<button id="logoutBtn" class="login hidden" onclick="logout()">تسجيل الخروج</button>
+<button id="adminBtn" class="login hidden" onclick="openAdmin()">⚙️ الإدارة</button>
+</header>
+
+<main class="container">
+
+<section id="home">
+<h1>الأقسام</h1>
+<div class="sub">اختر القسم الذي تريد الشحن منه</div>
+<div class="grid">
+  <div class="card"><div class="icon">🎮</div><b>الألعاب</b><button onclick="openSection('games')">عرض التطبيقات</button></div>
+  <div class="card"><div class="icon">📱</div><b>تطبيقات اللايف</b><button onclick="openSection('live')">عرض التطبيقات</button></div>
+  <div class="card"><div class="icon">📡</div><b>الاتصالات</b><button onclick="openSection('telecom')">عرض التطبيقات</button></div>
+  <div class="card"><div class="icon">🔑</div><b>التفعيل</b><button onclick="openSection('activation')">عرض التطبيقات</button></div>
+  <div class="card"><div class="icon">🛒</div><b>المتاجر الرقمية</b><button onclick="openSection('stores')">عرض التطبيقات</button></div>
+</div>
+</section>
+
+<section id="section" class="hidden">
+<button class="back" onclick="showHome()">← رجوع للأقسام</button>
+<h1 id="sectionTitle"></h1>
+<div class="sub">اختر التطبيق لعرض باقاته</div>
+<div id="apps" class="items"></div>
+</section>
+
+<section id="packages" class="hidden">
+<button class="back" onclick="showSection()">← رجوع</button>
+<h1 id="packagesTitle"></h1>
+<div class="sub">الباقات المتاحة</div>
+<div id="packageList" class="items"></div>
+</section>
+
+<section id="admin" class="hidden">
+<button class="back" onclick="showHome()">← العودة</button>
+<h1>⚙️ لوحة الإدارة</h1>
+<div class="sub">إدارة طلبات الإيداع</div>
+<div id="adminDeposits" class="items">
+<div class="sub">جاري تحميل الطلبات...</div>
+</div>
+</section>
+
+<section id="orders" class="hidden">
+<h1>طلباتي</h1>
+<div id="ordersList" class="items"></div>
+</section>
+
+</main>
+
+<nav class="bottom">
+<button onclick="showHome()"><span>🏠</span>الرئيسية</button>
+<button onclick="showOrders()"><span>📦</span>طلباتي</button>
+<button onclick="openDeposit()"><span>💰</span>إيداع</button>
+<button onclick="openSupport()"><span>🎧</span>الدعم</button>
+</nav>
+
+<div id="modal" class="modal hidden">
+<div class="box">
+<button class="close" onclick="closeModal()">✕</button>
+<div id="modalContent"></div>
+</div>
+</div>
+
+<script>
+let allProducts=[];
+let currentSection="";
+let currentApp="";
+
+const sections={
+ games:{title:"🎮 الألعاب",keys:["PUBG","FREE FIRE","CALL OF DUTY","MOBILE LEGENDS","GAME"]},
+ live:{title:"📱 تطبيقات اللايف",keys:["LIVE","CHAT","TALK","LUDO","TUMILE","LIVU","YALLA","BIGO","LIKEE","POPPO","MANGO","HAGO","HOOB","BOBO","VOVA","HAIO","YOKI","DIKA","KARAK","MIKOO","HALLA","ROOH","DOLI","SUGO","STAR MAKER"]},
+ telecom:{title:"📡 الاتصالات",keys:["SYRIATEL","MTN","TELECOM","DATA","INTERNET","BAKA","BUNDLE"]},
+ activation:{title:"🔑 التفعيل",keys:["NETFLIX","SHAHID","SHAHED","SHAMNA","IPTV"]},
+ stores:{title:"🛒 المتاجر الرقمية",keys:["STORE","STEAM","PLAYSTATION","XBOX","APPLE","GOOGLE","ITUNES","RAZER"]}
+};
+
+function esc(x){
+ return String(x??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+
+function hideAll(){
+ ["home","section","packages","orders"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+}
+
+function showHome(){
+ hideAll();
+ document.getElementById("home").classList.remove("hidden");
+}
+
+function showSection(){
+ hideAll();
+ document.getElementById("section").classList.remove("hidden");
+}
+
+function showOrders(){
+ hideAll();
+ document.getElementById("orders").classList.remove("hidden");
+ loadOrders();
+}
+
+async function api(url,opt={}){
+ const r=await fetch(url,opt);
+ return await r.json();
+}
+
+async function loadBalance(){
+ try{
+  const x=await api("/api/me");
+  const u=x.user || x;
+
+  if(u && u.username){
+    document.getElementById("balance").textContent=Number(u.balance||0).toFixed(2)+"$";
+    document.getElementById("usernameTop").textContent="👤 "+u.username;
+    document.getElementById("loginBtn").classList.add("hidden");
+    document.getElementById("logoutBtn").classList.remove("hidden");
+    if(u.is_admin){
+      document.getElementById("adminBtn").classList.remove("hidden");
+    }else{
+      document.getElementById("adminBtn").classList.add("hidden");
+    }
+  }else{
+    document.getElementById("balance").textContent="0.00$";
+    document.getElementById("usernameTop").textContent="";
+    document.getElementById("loginBtn").classList.remove("hidden");
+    document.getElementById("logoutBtn").classList.add("hidden");
+  }
+ }catch(e){}
+}
+
+async function logout(){
+ try{
+  await api("/api/logout",{method:"POST"});
+ }catch(e){}
+ location.reload();
+}
+
+async function loadProducts(){
+ try{
+  const x=await api("/api/products?limit=100");
+  allProducts=Array.isArray(x)?x:(x.products||[]);
+ }catch(e){
+  allProducts=[];
+ }
+}
+
+function matchProduct(p,keys){
+ const n=(p.name||"").toUpperCase();
+ return keys.some(k=>n.includes(k));
+}
+
+async function openSection(name){
+ hideAll();
+ currentSection=name;
+ document.getElementById("section").classList.remove("hidden");
+ document.getElementById("apps").classList.remove("hidden");
+
+ const box=document.getElementById("apps");
+ box.innerHTML="<div class='sub'>جاري التحميل...</div>";
+
+ try{
+   const data=await api("/api/apps?section="+encodeURIComponent(name)+"&limit=50&offset=0");
+   const apps=data.apps||[];
+
+   if(!apps.length){
+     box.innerHTML="<div class='sub'>لا توجد منتجات في هذا القسم.</div>";
+     return;
+   }
+
+   box.innerHTML=apps.map(app=>`
+     <div class="app-card">
+       <div class="app-image">
+         ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
+       </div>
+       <b>${esc(app.name)}</b>
+       <button onclick="showPackages('${String(app.name).replace(/'/g,"\\'")}')">عرض الباقات</button>
+     </div>
+   `).join("");
+
+   if(data.has_more){
+     box.insertAdjacentHTML("beforeend",`
+       <button class="more-btn" onclick="loadMoreApps('${name}',50)">
+         تحميل المزيد
+       </button>
+     `);
+   }
+ }catch(e){
+   console.error(e);
+   box.innerHTML="<div class='sub'>تعذر تحميل البيانات.</div>";
+ }
+}
+async function loadMoreApps(section,offset){
+ const box=document.getElementById("apps");
+ const old=document.querySelector(".more-btn");
+ if(old) old.remove();
+
+ try{
+   const data=await api("/api/apps?section="+encodeURIComponent(section)+"&limit=50&offset="+offset);
+   const apps=data.apps||[];
+
+   box.insertAdjacentHTML("beforeend",apps.map(app=>`
+     <div class="app-card">
+       <div class="app-image">
+         ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
+       </div>
+       <b>${esc(app.name)}</b>
+       <button onclick="showPackages('${String(app.name).replace(/\\'/g,"\\\\'")}')">عرض الباقات</button>
+     </div>
+   `).join(""));
+
+   if(data.has_more){
+     box.insertAdjacentHTML("beforeend",`
+       <button class="more-btn" onclick="loadMoreApps('${section}',${offset+50})">
+         تحميل المزيد
+       </button>
+     `);
+   }
+ }catch(e){
+   console.error(e);
+   box.insertAdjacentHTML("beforeend","<div class='sub'>تعذر تحميل المزيد.</div>");
+ }
+}
+
+async function showPackages(name){
+  currentApp=name;
+  hideAll();
+  document.getElementById("packages").classList.remove("hidden");
+  document.getElementById("packagesTitle").textContent=name;
+
+  const list=document.getElementById("packageList");
+  list.innerHTML="<div class='sub'>جاري تحميل الباقات...</div>";
+
+  try{
+    const appsData=await api(
+      "/api/apps?section="+encodeURIComponent(currentSection)+"&limit=100&offset=0"
+    );
+
+    const apps=appsData.apps||[];
+
+    const app=apps.find(a =>
+      String(a.name||"").trim().toUpperCase() ===
+      String(name).trim().toUpperCase()
+    );
+
+    if(!app || !Array.isArray(app.products) || !app.products.length){
+      list.innerHTML="<div class='sub'>لا توجد باقات لهذا التطبيق.</div>";
+      return;
+    }
+
+    const products=app.products||[];
+
+    list.innerHTML="<div class='sub'>جاري تحميل الأسعار...</div>";
+
+    const details=await Promise.all(
+      products.map(p =>
+        api("/api/packages/"+Number(p.id)).catch(()=>null)
+      )
+    );
+
+    const ps=details.flatMap(x =>
+      x && Array.isArray(x.packages) ? x.packages : []
+    );
+
+    if(!ps.length){
+      list.innerHTML="<div class='sub'>لا توجد باقات لهذا التطبيق.</div>";
+      return;
+    }
+
+    list.innerHTML=ps.map(p=>`
+      <div class="package">
+        <b>${esc(p.name)}</b>
+        <div class="price">
+          ${Number(p.store_price??p.price??0).toFixed(2)} $
+        </div>
+        <button onclick="buy(${Number(p.id)})">شراء</button>
+      </div>
+    `).join("");
+
+  }catch(e){
+    console.error(e);
+    list.innerHTML="<div class='sub'>تعذر تحميل الباقات.</div>";
+  }
+}
+
+async function buy(id){
+ openModal(`
+ <h2>شراء الباقة</h2>
+ <input id="player" placeholder="Player ID / رقم العميل">
+ <input id="qty" type="number" value="1" min="1" placeholder="الكمية">
+ <button onclick="sendOrder(${id})">تأكيد الشراء</button>
+ `);
+}
+
+async function sendOrder(id){
+ const player=document.getElementById("player").value.trim();
+ const qty=document.getElementById("qty").value||1;
+ if(!player){alert("أدخل رقم العميل");return}
+ const x=await api("/api/order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({product_id:id,playerId:player,qty:Number(qty)})});
+ alert(x.message||x.error||(x.success?"تم الطلب":"تعذر تنفيذ الطلب"));
+ if(x.success) closeModal();
+ await loadBalance();
+}
+
+function openModal(html){
+ document.getElementById("modalContent").innerHTML=html;
+ document.getElementById("modal").classList.remove("hidden");
+}
+function closeModal(){document.getElementById("modal").classList.add("hidden")}
+
+function openLogin(){
+ openModal(`
+ <h2>تسجيل الدخول</h2>
+ <input id="username" placeholder="اسم المستخدم">
+ <input id="password" type="password" placeholder="كلمة المرور">
+ <button onclick="login()">دخول</button>
+ <button onclick="register()">إنشاء حساب</button>
+ `);
+}
+
+async function login(){
+ const x=await api("/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username.value,password:password.value})});
+ alert(x.message||x.error||(x.success?"تم تسجيل الدخول":"تعذر الدخول"));
+ if(x.success){closeModal();await loadBalance()}
+}
+
+async function register(){
+ const x=await api("/api/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username.value,password:password.value})});
+ alert(x.message||x.error||(x.success?"تم إنشاء الحساب":"تعذر إنشاء الحساب"));
+}
+
+async function openDeposit(){
+ let info={};
+ try{info=await api("/api/deposit-info")}catch(e){}
+ const address=info.address||"f174c626a37be52be91b052cb5d6c846";
+ openModal(`
+ <h2>شام كاش</h2>
+ <div class="sham">
+ <b>عنوان شام كاش</b><br>
+ ${esc(address)}
+ </div>
+ <p>أرسل المبلغ إلى العنوان أعلاه، ثم أرسل رقم العملية أو رقم العميل.</p>
+ <input id="depAmount" type="number" min="1" placeholder="المبلغ">
+ <input id="depProof" placeholder="رقم العملية / رقم العميل">
+ <button onclick="sendDeposit()">إرسال طلب الإيداع</button>
+ `);
+}
+
+async function sendDeposit(){
+ const x=await api("/api/deposit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+ amount:Number(document.getElementById("depAmount").value),
+ method:"Sham Cash",
+ proof:document.getElementById("depProof").value
+ })});
+ alert(x.message||x.error||(x.success?"تم إرسال طلب الإيداع":"تعذر إرسال الطلب"));
+ if(x.success)closeModal();
+}
+
+function openSupport(){
+ openModal(`
+ <h2>الدعم</h2>
+ <p>للدعم عبر الهاتف:</p>
+ <h3>0992509544</h3>
+ <a href="tel:0992509544"><button>اتصال</button></a>
+ <textarea id="supportMsg" placeholder="اكتب رسالتك"></textarea>
+ <button onclick="sendSupport()">إرسال</button>
+ `);
+}
+
+async function sendSupport(){
+ const x=await api("/api/support",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:document.getElementById("supportMsg").value})});
+ alert(x.message||x.error||(x.success?"تم إرسال الرسالة":"تعذر الإرسال"));
+}
+
+async function loadOrders(){
+ const list=document.getElementById("ordersList");
+ try{
+  const x=await api("/api/orders");
+  const a=Array.isArray(x)?x:(x.orders||[]);
+  list.innerHTML=a.length?a.map(o=>`<div class="package"><b>${esc(o.name)}</b><div class="price">${esc(o.price)} $</div><div>${esc(o.status)}</div></div>`).join(""):"<div class='sub'>لا توجد طلبات حتى الآن.</div>";
+ }catch(e){list.innerHTML="<div class='sub'>سجل الدخول لعرض طلباتك.</div>"}
+}
+
+
+
+async function openAdmin(){
+  try{
+    const me=await api("/api/me");
+    const u=me.user || me;
+    if(!u || !u.is_admin){
+      alert("غير مسموح");
+      return;
+    }
+
+    hideAll();
+    document.getElementById("admin").classList.remove("hidden");
+    await loadAdminDeposits();
+  }catch(e){
+    alert("تعذر فتح لوحة الإدارة");
+  }
+}
+
+async function loadAdminDeposits(){
+  const box=document.getElementById("adminDeposits");
+  try{
+    const x=await api("/api/admin");
+    const deposits=x.deposits || [];
+
+    if(!deposits.length){
+      box.innerHTML="<div class='sub'>لا توجد طلبات إيداع حالياً.</div>";
+      return;
+    }
+
+    box.innerHTML=deposits.map(d=>`
+      <div class="package">
+        <b>المستخدم: ${esc(d.username||"")}</b>
+        <div>المبلغ: <strong>${esc(d.amount)} $</strong></div>
+        <div>الطريقة: ${esc(d.method||"Sham Cash")}</div>
+        <div>رقم العملية: ${esc(d.proof||"")}</div>
+        <div>الحالة: ${esc(d.status||"")}</div>
+        ${String(d.status||"").toLowerCase()=="pending" ? `
+          <button onclick="depositAction(${Number(d.id)},'approve')">✅ موافقة</button>
+          <button onclick="depositAction(${Number(d.id)},'reject')" style="background:#8b2635">❌ رفض</button>
+        ` : ""}
+      </div>
+    `).join("");
+  }catch(e){
+    box.innerHTML="<div class='sub'>تعذر تحميل طلبات الإيداع.</div>";
+  }
+}
+
+async function depositAction(id,action){
+  if(!confirm(action==="approve" ? "تأكيد الموافقة على الإيداع؟" : "تأكيد رفض الإيداع؟")) return;
+
+  const x=await api("/api/admin/deposit/"+id,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({action})
+  });
+
+  alert(x.message || x.error || (x.success?"تم":"تعذر تنفيذ العملية"));
+  await loadAdminDeposits();
+}
+
+
+showHome();
+loadBalance();
+</script>
+</body>
+</html>
