@@ -286,7 +286,7 @@ async function openSection(name){
          ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
        </div>
        <b>${esc(app.name)}</b>
-       <button onclick="showPackages('${String(app.name).replace(/'/g,"\\'")}')">عرض الباقات</button>
+       <button onclick="showPackages(${Number(app.products?.[0]?.id||0)}, '${String(app.name).replace(/'/g,"\\'")}')">عرض الباقات</button>
      </div>
    `).join("");
 
@@ -334,7 +334,7 @@ async function loadMoreApps(section,offset){
  }
 }
 
-async function showPackages(name){
+async function showPackages(productId,name){
   currentApp=name;
   hideAll();
   document.getElementById("packages").classList.remove("hidden");
@@ -344,28 +344,8 @@ async function showPackages(name){
   list.innerHTML="<div class='sub'>جاري تحميل الباقات...</div>";
 
   try{
-    const data=await api("/api/apps?section="+encodeURIComponent(currentSection)+"&limit=500&offset=0");
-    const apps=data.apps||[];
-
-    const app=apps.find(a =>
-      String(a.name||"").trim().toUpperCase() ===
-      String(name||"").trim().toUpperCase()
-    );
-
-    if(!app || !Array.isArray(app.products) || !app.products.length){
-      list.innerHTML="<div class='sub'>لا توجد باقات لهذا التطبيق.</div>";
-      return;
-    }
-
-    const products=app.products;
-
-    const details=await Promise.all(
-      products.map(p=>api("/api/packages/"+Number(p.id)).catch(()=>null))
-    );
-
-    const ps=details.flatMap(x =>
-      x && Array.isArray(x.packages) ? x.packages : []
-    );
+    const d=await api("/api/packages/"+Number(productId));
+    const ps=d && Array.isArray(d.packages) ? d.packages : [];
 
     if(!ps.length){
       list.innerHTML="<div class='sub'>لا توجد باقات لهذا التطبيق.</div>";
