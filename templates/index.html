@@ -344,15 +344,12 @@ async function showPackages(name){
   list.innerHTML="<div class='sub'>جاري تحميل الباقات...</div>";
 
   try{
-    const appsData=await api(
-      "/api/apps?section="+encodeURIComponent(currentSection)+"&limit=100&offset=0"
-    );
-
-    const apps=appsData.apps||[];
+    const data=await api("/api/apps?section="+encodeURIComponent(currentSection)+"&limit=500&offset=0");
+    const apps=data.apps||[];
 
     const app=apps.find(a =>
       String(a.name||"").trim().toUpperCase() ===
-      String(name).trim().toUpperCase()
+      String(name||"").trim().toUpperCase()
     );
 
     if(!app || !Array.isArray(app.products) || !app.products.length){
@@ -360,14 +357,10 @@ async function showPackages(name){
       return;
     }
 
-    const products=app.products||[];
-
-    list.innerHTML="<div class='sub'>جاري تحميل الأسعار...</div>";
+    const products=app.products;
 
     const details=await Promise.all(
-      products.map(p =>
-        api("/api/packages/"+Number(p.id)).catch(()=>null)
-      )
+      products.map(p=>api("/api/packages/"+Number(p.id)).catch(()=>null))
     );
 
     const ps=details.flatMap(x =>
