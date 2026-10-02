@@ -146,53 +146,19 @@ def logout():session.clear();return jsonify(ok=True)
 
 # تصنيف المنتجات إلى أقسام المتجر
 def section_for(p):
-    n=str(p.get("name") or "").upper()
-    c=str(p.get("category_name") or p.get("category") or "").upper()
-    text=n+" "+c
+    # استخدم تصنيف Sham4Store الأصلي أولاً
+    original = str(p.get("section") or "").strip().lower()
+    if original in ("games", "live", "telecom", "activation", "stores"):
+        return original
+
+    # FC POINTS مستبعدة
+    n = str(p.get("name") or "").upper()
     if "FC POINTS" in n:
         return "excluded"
 
-    live=[
-        "LIVE","CHAT","TALK","LUDO","LUDU","MEYO","TUMILE","LIVU","YALLA","BIGO",
-        "LIKEE","POPPO","MANGO","HAGO","HOOB","BOBO","VOVA","HAIO",
-        "YOKI","DIKA","KARAK","MIKOO","HALLA","ROOH","DOLI","SUGO",
-        "STAR MAKER","LEESKI","MAZA","HOPI","OOYUNI","NAHKi","WILL CHILL",
-        "IMO"
-    ]
-
-    activation=["NETFLIX","SHAHID","SHAHED","SHAMNA","IPTV","ACTIVATION"]
-
-    telecom=[
-        "SYRIATEL","MTN","TELECOM","DATA","INTERNET","BUNDLE","BAKA",
-        "GB","GIB","MINUTES","FSN","ALFA","MTC","DOLLAR"
-    ]
-
-    stores=["STEAM","PLAYSTATION","PSN","XBOX","APPLE","ITUNES","GOOGLE PLAY","RAZER","STORE"]
-
-    if any(x in text for x in activation):
-        return "activation"
-    if any(x in text for x in telecom):
-        return "telecom"
-    if any(x in text for x in stores):
-        return "stores"
-    if any(x in text for x in live):
-        return "live"
-
-    # ألعاب معروفة
-    games=[
-        "PUBG","BRAWL STARS","CLASH OF CLANS","CLASH GOLD PASS",
-        "HAY DAY","8BALL POOL","BERMUDA","MIXU","BRAUL",
-        "FARM PASS","أجتياز براول",
-        "JAWAKER","ROBLOX","FREE FIRE","MOBILE LEGENDS",
-        "CALL OF DUTY","CODM","FORTNITE","MINECRAFT",
-        "EA FC","FIFA","FC MOBILE","FC POINTS"
-    ]
-
-    if any(x in text for x in games):
-        return "games"
-
-    # أي منتج غير مصنف لا يوضع تلقائياً ضمن الألعاب
+    # لا نضع المنتجات غير المصنفة ضمن الألعاب
     return "other"
+
 
 @app.get("/api/categories")
 def categories():
