@@ -445,6 +445,35 @@ def apps():
         has_more=(offset+limit)<len(result)
     )
 
+@app.get("/api/app-packages")
+def app_packages():
+    try:
+        ids=str(request.args.get("ids","")).split(",")
+        ids={int(x) for x in ids if x.strip().isdigit()}
+
+        if not ids:
+            return jsonify(ok=True,packages=[])
+
+        out=[]
+
+        for p in products():
+            try:
+                pid=int(p.get("id"))
+            except Exception:
+                continue
+
+            if pid not in ids:
+                continue
+
+            x=dict(p)
+            x["store_price"]=price(p)
+            out.append(x)
+
+        return jsonify(ok=True,packages=out)
+
+    except Exception as e:
+        return jsonify(ok=False,error=str(e),packages=[]),500
+
 @app.get("/api/packages/<int:product_id>")
 def packages(product_id):
     try:
