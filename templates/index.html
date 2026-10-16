@@ -82,6 +82,68 @@ h1{font-size:23px;margin:8px 0}
   padding:11px 14px;
   cursor:pointer;
 }
+.telecom-card{
+  background:linear-gradient(145deg,#1d1438,#120c27);
+  border:1px solid #49317a;
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 8px 25px #0005;
+  cursor:pointer;
+  transition:.2s;
+}
+.telecom-card:active{transform:scale(.98)}
+.telecom-card .app-image{
+  height:155px;
+  margin:0;
+  border-radius:0;
+}
+.telecom-card .telecom-name{
+  padding:13px 12px 12px;
+  text-align:center;
+  font-weight:900;
+  font-size:16px;
+}
+.telecom-packages{
+  display:none;
+  grid-column:1/-1;
+  background:#120c27;
+  border:1px solid #49317a;
+  border-radius:15px;
+  padding:12px;
+  margin-top:-5px;
+}
+.telecom-packages.open{display:block}
+.telecom-package{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  background:#1b1233;
+  border:1px solid #35215b;
+  border-radius:12px;
+  padding:11px;
+  margin-bottom:8px;
+}
+.telecom-package:last-child{margin-bottom:0}
+.telecom-package .tp-info{min-width:0}
+.telecom-package .tp-name{
+  font-weight:bold;
+  line-height:1.5;
+}
+.telecom-package .tp-price{
+  color:#b995ff;
+  font-weight:900;
+  margin-top:3px;
+}
+.telecom-package button{
+  flex-shrink:0;
+  background:#7c3aed;
+  color:#fff;
+  border:0;
+  border-radius:9px;
+  padding:8px 11px;
+  font-weight:bold;
+}
 .app-image{
   width:100%;
   height:150px;
@@ -275,28 +337,113 @@ async function openSection(name){
      return;
    }
 
-   box.innerHTML=apps.map(app=>`
-     <div class="app-card">
-       <div class="app-image">
-         ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
+   if(name==="telecom"){
+     box.innerHTML=apps.map((app,i)=>`
+       <div class="telecom-card" onclick="toggleTelecom(${i})">
+         <div class="app-image">
+           ${app.image
+             ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">`
+             : `<div class="no-image">📡</div>`}
+         </div>
+         <div class="telecom-name">${esc(app.name)}</div>
        </div>
-       <b>${esc(app.name)}</b>
-       <button onclick='showPackages(${JSON.stringify((app.products||[]).map(x=>Number(x.id)).filter(Boolean))}, ${JSON.stringify(app.name||"")})'>عرض الباقات</button>
-     </div>
-   `).join("");
 
-   if(data.has_more){
-     box.insertAdjacentHTML("beforeend",`
-       <button class="more-btn" onclick="loadMoreApps('${name}',50)">
-         تحميل المزيد
-       </button>
-     `);
+       <div id="telecom-packages-${i}" class="telecom-packages">
+         <div class="sub">اضغط لإظهار الباقات...</div>
+       </div>
+     `).join("");
+
+     window.telecomApps=apps;
+   }else{
+     box.innerHTML=apps.map(app=>`
+       <div class="app-card">
+         <div class="app-image">
+           ${app.image
+             ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">`
+             : `<div class="no-image">📦</div>`}
+         </div>
+         <b>${esc(app.name)}</b>
+         <button onclick='showPackages(${JSON.stringify((app.products||[]).map(x=>Number(x.id)).filter(Boolean))}, ${JSON.stringify(app.name||"")})'>عرض الباقات</button>
+       </div>
+     `).join("");
+
+     if(data.has_more){
+       box.insertAdjacentHTML("beforeend",`
+         <button class="more-btn" onclick="loadMoreApps('${name}',50)">
+           تحميل المزيد
+         </button>
+       `);
+     }
    }
  }catch(e){
    console.error(e);
    box.innerHTML="<div class='sub'>تعذر تحميل البيانات.</div>";
  }
 }
+
+async function toggleTelecom(index){
+ const apps=window.telecomApps||[];
+ const app=apps[index];
+ if(!app)return;
+
+ const box=document.getElementById("telecom-packages-"+index);
+ if(!box)return;
+
+ if(box.classList.contains("open")){
+   box.classList.remove("open");
+   return;
+ }
+
+ document.querySelectorAll(".telecom-packages.open").forEach(x=>{
+   x.classList.remove("open");
+ });
+
+ box.classList.add("open");
+ box.innerHTML="<div class='sub'>جاري تحميل الباقات...</div>";
+
+ try{
+   const ids=(app.products||[])
+     .map(x=>Number(x.id))
+     .filter(Boolean);
+
+   if(!ids.length){
+     box.innerHTML="<div class='sub'>لا توجد باقات لهذا المنتج.</div>";
+     return;
+   }
+
+   const data=await api(
+     "/api/app-packages?ids="+encodeURIComponent(ids.join(","))
+   );
+
+   const ps=data && Array.isArray(data.packages)
+     ? data.packages
+     : [];
+
+   if(!ps.length){
+     box.innerHTML="<div class='sub'>لا توجد باقات لهذا المنتج.</div>";
+     return;
+   }
+
+   box.innerHTML=ps.map(p=>`
+     <div class="telecom-package">
+       <div class="tp-info">
+         <div class="tp-name">${esc(p.name)}</div>
+         <div class="tp-price">
+           ${Number(p.store_price??p.price??0).toFixed(2)} $
+         </div>
+       </div>
+       <button onclick="event.stopPropagation();buy(${Number(p.id)})">
+         شراء
+       </button>
+     </div>
+   `).join("");
+
+ }catch(e){
+   console.error(e);
+   box.innerHTML="<div class='sub'>تعذر تحميل الباقات.</div>";
+ }
+}
+
 async function loadMoreApps(section,offset){
  const box=document.getElementById("apps");
  const old=document.querySelector(".more-btn");
@@ -306,15 +453,36 @@ async function loadMoreApps(section,offset){
    const data=await api("/api/apps?section="+encodeURIComponent(section)+"&limit=50&offset="+offset);
    const apps=data.apps||[];
 
-   box.insertAdjacentHTML("beforeend",apps.map(app=>`
-     <div class="app-card">
-       <div class="app-image">
-         ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
+   if(section==="telecom"){
+     const startIndex=(window.telecomApps||[]).length;
+     window.telecomApps=(window.telecomApps||[]).concat(apps);
+
+     box.insertAdjacentHTML("beforeend",apps.map((app,j)=>{
+       const i=startIndex+j;
+       return `
+       <div class="telecom-card" onclick="toggleTelecom(${i})">
+         <div class="app-image">
+           ${app.image
+             ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">`
+             : `<div class="no-image">📡</div>`}
+         </div>
+         <div class="telecom-name">${esc(app.name)}</div>
        </div>
-       <b>${esc(app.name)}</b>
-       <button onclick='showPackages(${JSON.stringify((app.products||[]).map(x=>Number(x.id)).filter(Boolean))}, ${JSON.stringify(app.name||"")})'>عرض الباقات</button>
-     </div>
-   `).join(""));
+       <div id="telecom-packages-${i}" class="telecom-packages">
+         <div class="sub">اضغط لإظهار الباقات...</div>
+       </div>`;
+     }).join(""));
+   }else{
+     box.insertAdjacentHTML("beforeend",apps.map(app=>`
+       <div class="app-card">
+         <div class="app-image">
+           ${app.image ? `<img src="${esc(app.image)}" loading="lazy" onerror="this.style.display='none'">` : `<div class="no-image">📦</div>`}
+         </div>
+         <b>${esc(app.name)}</b>
+         <button onclick='showPackages(${JSON.stringify((app.products||[]).map(x=>Number(x.id)).filter(Boolean))}, ${JSON.stringify(app.name||"")})'>عرض الباقات</button>
+       </div>
+     `).join(""));
+   }
 
    if(data.has_more){
      box.insertAdjacentHTML("beforeend",`
@@ -327,6 +495,29 @@ async function loadMoreApps(section,offset){
    console.error(e);
    box.insertAdjacentHTML("beforeend","<div class='sub'>تعذر تحميل المزيد.</div>");
  }
+}
+
+function realAppImage(name){
+ const n=String(name||"").toUpperCase().trim();
+ const m={
+  "YALLA LIVE":"https://logo.clearbit.com/yalla.live",
+  "LIVU":"https://logo.clearbit.com/livu.me",
+  "TUMILE":"https://logo.clearbit.com/tumile.com",
+  "BIGO LIVE":"https://logo.clearbit.com/bigo.tv",
+  "POPPO":"https://logo.clearbit.com/poppo.com",
+  "HAGO":"https://logo.clearbit.com/hagoapp.com",
+  "MEYO":"https://logo.clearbit.com/meyo.app",
+  "LIKEE":"https://logo.clearbit.com/likee.video",
+  "IMO":"https://logo.clearbit.com/imo.im",
+  "AZAR":"https://logo.clearbit.com/azar.live",
+  "NIMO TV":"https://logo.clearbit.com/nimo.tv",
+  "TANGO LIVE":"https://logo.clearbit.com/tango.me",
+  "MANGO LIVE":"https://logo.clearbit.com/mango-live.com",
+  "SNAPCHAT":"https://logo.clearbit.com/snapchat.com",
+  "SUGO LITE":"https://logo.clearbit.com/sugo.com",
+  "UPLIVE":"https://logo.clearbit.com/upliveapp.com"
+ };
+ return m[n]||"";
 }
 
 async function showPackages(productIds,name){
@@ -350,7 +541,19 @@ async function showPackages(productIds,name){
     }
 
     const data=await api("/api/app-packages?ids="+encodeURIComponent(ids.join(",")));
-    const ps=data && Array.isArray(data.packages) ? data.packages : [];
+    const rawPackages=data && Array.isArray(data.packages) ? data.packages : [];
+    const seenPackages=new Set();
+    const ps=rawPackages.filter(p=>{
+      const name=String(p.name||"").trim().replace(/\s+/g," ").toUpperCase();
+      const price=Number(p.store_price??p.price??0).toFixed(2);
+      const type=String(p.product_type||"").trim().toUpperCase();
+      const params=JSON.stringify(p.params||[]);
+      const qty=JSON.stringify(p.qty_values||null);
+      const key=JSON.stringify([name,price,type,params,qty]);
+      if(seenPackages.has(key)) return false;
+      seenPackages.add(key);
+      return true;
+    });
 
     if(!ps.length){
       list.innerHTML="<div class='sub'>لا توجد باقات لهذا التطبيق.</div>";

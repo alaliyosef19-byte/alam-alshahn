@@ -55,7 +55,7 @@ def products():
     return PRODUCT_CACHE
 
 def price(p):
-    # سعر Sham4Store + هامش ربح 5%
+    # سعر Sham4Store + هامش ربح 2%
     try:
         base = float(p.get("price") or 0)
     except:
@@ -73,7 +73,7 @@ def price(p):
     except:
         pass
 
-    return round(base * 1.05, 2)
+    return round(base * 1.02, 2)
 
 def user():
  if not session.get("uid"):return None
@@ -148,7 +148,16 @@ def section_for(p):
     live=[
         "YALLA","LUDO","LIVU","TUMILE","BIGO","POPPO",
         "HAGO","MEYO","SUGO","STAR MAKER","LIKEE",
-        "LEESKI","IMO"
+        "LEESKI","IMO","AZAR","NIMO","MICO","HIGO","MIGO",
+        "YOYO","YOHO","TAMI","OOHLA","HEYA","FANCY","AYOME",
+        "WYAK","COCCO","FALLA","AHLAN","HABBY","KIYO","LIGO",
+        "LIGHT","NABD","TAKA","SABA","DIMO","ASWAT","LAMI",
+        "SPARTY","BEELA","BOBO","GOMEET","HAWA","SOULFA",
+        "TANGO","MANGO","PAWA","DANA","OPA","KITI","LADO",
+        "SAADA","HALLA","HATI","VILAA","UPLIVE","GAMET",
+        "XENA","SODFA","TADA","ALLO","WAHO","SANGO","POTA",
+        "WAAW","GIMME","HAKI","SALAM","HIYA","LAYLA","ECHO",
+        "HABI","HOOB","LAMA","YAAHLAN","MR7BA","PEP","HOBY"
     ]
     if any(x in text for x in live):
         return "live"
@@ -321,10 +330,14 @@ def apps():
             }
             if upper in canonical:
                 title=canonical[upper]
+            elif upper.endswith(" CHAT"):
+                title=upper[:-5].strip()
+            elif upper.endswith(" LIVE"):
+                title=upper[:-5].strip()
             excluded={
                 "قسم التطبيقات","WORLD OF APPLICATIONS","APPLICATION SHIPPING",
                 "APPS SECTION","APPLICATIONS","APLLICATIONS","APPLICATION NUMBERS",
-                "YALLA LUDO","YALLA LUDO GOLD","YALLA LUDO GOLD دهب",
+                "YALLA LUDO GOLD","YALLA LUDO GOLD دهب",
                 "YALLA LUDO DIAMONDS","LUDO DIAMONDS","LUDO CLUB",
                 "LUDO CLUB COINS","LUDO CLUB CASH","LUDO WORLD",
                 "FARLIGHT 84","FARLIGHT","MOBILE LEGENDS"
@@ -390,11 +403,13 @@ def apps():
             if title.upper()!="PUBG GLOBAL OTOMATIK":
                 continue
             title="PUBG GLOBAL OTOMATIK"
-        key=title.upper()
+        title_key = " ".join(title.upper().split())
+        display_title = title
+        key = title_key
 
         if key not in groups:
             groups[key]={
-                "name":title,
+                "name":display_title,
                 "image":image_of(pdt),
                 "parent_id":pdt.get("parent_id"),
                 "products":[],
@@ -407,7 +422,10 @@ def apps():
         pkey="|".join([
             " ".join(pname.upper().split()),
             str(pdt.get("product_type") or "").upper().strip(),
-            "|".join(str(x).strip().upper() for x in (pdt.get("params") or []))
+            "|".join(str(x).strip().upper() for x in (pdt.get("params") or [])),
+            str(pdt.get("price") if pdt.get("price") is not None else "").strip(),
+            repr(pdt.get("qty_values") or []),
+            str(pdt.get("parent_id") if pdt.get("parent_id") is not None else "").strip()
         ])
         if pkey not in g["_seen"]:
             g["_seen"].add(pkey)
