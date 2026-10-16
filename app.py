@@ -1,3 +1,4 @@
+from dotenv import load_dotenv; load_dotenv()
 import time
 import os,sqlite3,uuid,requests
 from flask import Flask,request,jsonify,render_template,session
@@ -38,39 +39,20 @@ def headers(): return {"api-token":KEY,"Accept":"application/json"}
 def products():
     global PRODUCT_CACHE, PRODUCT_CACHE_AT
     now=time.time()
+
     if PRODUCT_CACHE is not None and now-PRODUCT_CACHE_AT < CACHE_TTL:
         return PRODUCT_CACHE
 
     r=requests.get(
         BASE+"/client/api/products",
-        params={"base":1},
         headers=headers(),
-        timeout=25
+        timeout=30
     )
     r.raise_for_status()
-
     data=r.json()
     PRODUCT_CACHE=data if isinstance(data,list) else []
-
     PRODUCT_CACHE_AT=now
     return PRODUCT_CACHE
-
-
-def product_details(product_id):
-    r=requests.get(
-        BASE+"/client/api/products",
-        params={"products_id":product_id},
-        headers=headers(),
-        timeout=15
-    )
-    r.raise_for_status()
-    data=r.json()
-
-    if isinstance(data,list) and data:
-        return data[0]
-    if isinstance(data,dict):
-        return data
-    return None
 
 def price(p):
     # سعر Sham4Store + هامش ربح 5%
@@ -146,19 +128,70 @@ def logout():session.clear();return jsonify(ok=True)
 
 # تصنيف المنتجات إلى أقسام المتجر
 def section_for(p):
-    # استخدم تصنيف Sham4Store الأصلي أولاً
-    original = str(p.get("section") or "").strip().lower()
-    if original in ("games", "live", "telecom", "activation", "stores"):
-        return original
+    n=str(p.get("name") or "").upper()
+    c=str(p.get("category_name") or p.get("category") or "").upper()
+    text=n+" "+c
 
-    # FC POINTS مستبعدة
-    n = str(p.get("name") or "").upper()
-    if "FC POINTS" in n:
+    if "FC POINTS" in text:
         return "excluded"
 
-    # لا نضع المنتجات غير المصنفة ضمن الألعاب
-    return "other"
+    # الألعاب
+    games=[
+        "PUBG","FREE FIRE","CALL OF DUTY","COD MOBILE",
+        "8BALL","BRAWL STARS","CLASH OF CLANS","HAY DAY",
+        "FARM PASS","MIXU","BERMUDA","WAR ROBOTS"
+    ]
+    if any(x in text for x in games):
+        return "games"
 
+    # تطبيقات اللايف
+    live=[
+        "YALLA","LUDO","LIVU","TUMILE","BIGO","POPPO",
+        "HAGO","MEYO","SUGO","STAR MAKER","LIKEE",
+        "LEESKI","IMO"
+    ]
+    if any(x in text for x in live):
+        return "live"
+
+    chat_live_words=[
+        "CHAT","LIVE","PARTY","LIVU","BIGO","POPPO","TUMILE","YALLA",
+        "MEYO","SUGO","LIKEE","IMO","AZAR","HAGO","NIMO","MICO",
+        "HIGO","MIGO","YOYO","YOHO","TAMI","OOHLA","HEYA","FANCY",
+        "AYOME","WYAK","COCCO","FALLA","AHLAN","HABBY","KIYO","LIGO",
+        "LIGHT","NABD","TAKA","SABA","DIMO","ASWAT","LAMI","SPARTY",
+        "BEELA","BOBO","GOMEET","HAWA","SOULFA","TANGO","MANGO","PAWA",
+        "DANA","OPA","KITI","LADO","SAADA","HALLA","HATI","VILAA",
+        "UPLIVE","GAMET","XENA","SODFA","TADA","ALLO","WAHO","SANGO",
+        "POTA","WAAW","GIMME","HAKI","SALAM","HIYA","LAYLA","ECHO",
+        "HABI","HOOB","LAMA","YAAHLAN","MR7BA","PEP","HOBY","PARTY"
+    ]
+    if any(x in text for x in chat_live_words):
+        return "live"
+
+    # الاتصالات
+    telecom=[
+        "SYRIATEL","SYRIA TEL","MTN SYRIA","MTN",
+        "MTC","ALFA","FSN","SPACETEL","TELECOM SYRIA"
+    ]
+    if any(x in text for x in telecom):
+        return "telecom"
+
+    # التفعيل
+    activation=[
+        "NETFLIX","SHAHID","SHAHED","SHAMNA","IPTV"
+    ]
+    if any(x in text for x in activation):
+        return "activation"
+
+    # المتاجر الرقمية
+    stores=[
+        "ITUNES","APPLE","GOOGLE PLAY","STEAM",
+        "PLAYSTATION","PSN","XBOX","RAZER","STORE"
+    ]
+    if any(x in text for x in stores):
+        return "stores"
+
+    return "other"
 
 @app.get("/api/categories")
 def categories():
@@ -182,160 +215,78 @@ def categories():
 
 @app.get("/api/apps")
 def apps():
-    import re
-
     section=str(request.args.get("section","games")).strip().lower()
-
     try:
         limit=min(max(int(request.args.get("limit",50)),1),500)
     except:
         limit=50
-
     try:
         offset=max(int(request.args.get("offset",0)),0)
     except:
         offset=0
 
     groups={}
+    aliases={
+        "PUBG GLOBAL OTOMATIK":"PUBG GLOBAL OTOMATIK",
+        "PUBG GLOBAL":"PUBG GLOBAL",
+        "PUBG MOBILE":"PUBG MOBILE",
+        "FREE FIRE":"FREE FIRE",
+        "CALL OF DUTY":"CALL OF DUTY MOBILE",
+        "8BALL":"8BALL POOL",
+        "BRAWL STARS":"BRAWL STARS",
+        "CLASH OF CLANS":"CLASH OF CLANS",
+        "HAY DAY":"HAY DAY",
+        "FARM PASS":"FARM PASS",
+        "WAR ROBOTS":"WAR ROBOTS",
+        "YALLA LIVE":"YALLA LIVE",
+        "YALLA LUDO":"YALLA LUDO",
+        "LIVU":"LIVU",
+        "LEVU":"LIVU",
+        "TUMILE":"TUMILE",
+        "BIGO":"BIGO LIVE",
+        "POPPO":"POPPO",
+        "HAGO":"HAGO",
+        "MEYO":"MEYO",
+        "SUGO":"SUGO",
+        "STAR MAKER":"STAR MAKER",
+        "LIKEE":"LIKEE",
+        "LEESKI":"LEESKI",
+        "IMO":"IMO",
+        "LUDO":"LUDO",
+        "ITUNES":"ITUNES",
+        "APPLE":"APPLE",
+        "GOOGLE":"GOOGLE",
+        "STEAM":"STEAM",
+        "PLAYSTATION":"PLAYSTATION",
+        "PSN":"PLAYSTATION",
+        "XBOX":"XBOX",
+        "RAZER":"RAZER",
+        "SYRIATEL":"SYRIATEL",
+        "MTN":"MTN",
+        "MTC":"MTC",
+        "NETFLIX":"NETFLIX",
+        "SHAHID":"SHAHID",
+        "SHAHED":"SHAHED",
+        "SHAMNA":"SHAMNA TV",
+        "IPTV":"IPTV"
+    }
 
     def image_of(p):
         for k in ("image","category_img"):
             v=str(p.get(k) or "").strip()
-            if v and v.lower() not in (
-                "https://api.sham4store.com/",
-                "http://api.sham4store.com/",
-                "https://api.sham4store.com",
-                "http://api.sham4store.com"
-            ) and v.lower().startswith(("http://","https://")):
+            if v.startswith(("http://","https://")) and v.rstrip("/") not in ("https://api.sham4store.com","http://api.sham4store.com"):
                 return v
         return ""
 
-    def normalize(name):
-        raw=re.sub(r"\s+"," ",str(name or "").strip())
-        u=raw.upper()
-
-        # ===== الألعاب =====
-        fixed_games=[
-            ("PUBG GLOBAL","PUBG GLOBAL"),
-            ("PUBG MOBILE GLOBAL","PUBG GLOBAL"),
-            ("PUBG GLOBAL OTOMATIK","PUBG GLOBAL"),
-            ("PUBG MOBILE","PUBG MOBILE"),
-            ("FREE FIRE","FREE FIRE"),
-            ("CALL OF DUTY","CALL OF DUTY MOBILE"),
-            ("CODM","CALL OF DUTY MOBILE"),
-            ("8BALL POOL","8BALL POOL"),
-            ("BRAWL STARS","BRAWL STARS"),
-            ("CLASH OF CLANS","CLASH OF CLANS"),
-            ("CLASH GOLD PASS","CLASH GOLD PASS"),
-            ("HAY DAY","HAY DAY"),
-            ("FARM PASS","FARM PASS"),
-            ("MIXU","MIXU"),
-            ("BERMUDA","BERMUDA"),
-        ]
-        for needle,title in fixed_games:
-            if needle in u:
+    def app_name(p):
+        text=(str(p.get("category_name") or "")+" "+str(p.get("name") or "")).upper()
+        for needle,title in aliases.items():
+            if needle in text:
                 return title
-
-        # ===== التطبيقات المعروفة =====
-        fixed_apps=[
-            ("YALLA LIVE","YALLA LIVE"),
-            ("يلا لايف","YALLA LIVE"),
-            ("YALLA LUDO","YALLA LUDO"),
-            ("LUDO DIAMONDS","YALLA LUDO"),
-            ("YALLA LUDO GOLD","YALLA LUDO"),
-            ("LIVU","LIVU"),
-            ("TUMILE","TUMILE"),
-            ("BIGO","BIGO LIVE"),
-            ("POPPO","POPPO"),
-            ("HAGO","HAGO"),
-            ("MEYO","MEYO"),
-            ("SUGO","SUGO"),
-            ("STAR MAKER","STAR MAKER"),
-            ("LIKEE","LIKEE"),
-            ("LEESKI","LEESKI"),
-            ("IMO","IMO"),
-        ]
-        for needle,title in fixed_apps:
-            if needle in u:
-                return title
-
-        # ===== المتاجر =====
-        stores=[
-            ("ITUNES","ITUNES"),
-            ("APPLE","APPLE"),
-            ("GOOGLE PLAY","GOOGLE PLAY"),
-            ("STEAM","STEAM"),
-            ("PLAYSTATION","PLAYSTATION"),
-            ("PSN","PLAYSTATION"),
-            ("XBOX","XBOX"),
-            ("RAZER","RAZER"),
-        ]
-        for needle,title in stores:
-            if needle in u:
-                return title
-
-        # ===== الاتصالات =====
-        telecom=[
-            ("SYRIATEL","SYRIATEL"),
-            ("MTN","MTN"),
-            ("ALFA","ALFA"),
-            ("MTC","MTC"),
-            ("FSN","FSN"),
-        ]
-        for needle,title in telecom:
-            if needle in u:
-                return title
-
-        # ===== التفعيل =====
-        activation=[
-            ("NETFLIX","NETFLIX"),
-            ("SHAHID","SHAHID"),
-            ("SHAHED","SHAHED"),
-            ("SHAMNA","SHAMNA TV"),
-            ("IPTV","IPTV"),
-        ]
-        for needle,title in activation:
-            if needle in u:
-                return title
-
-        # ===== تنظيف عام =====
-        x=raw
-
-        x=re.sub(r"^\s*[\d,]+(?:[.,]\d+)?\s*","",x)
-        x=re.sub(
-            r"\s*[\d,]+(?:[.,]\d+)?\s*"
-            r"(?:TL|TRY|USD|EUR|UC|FC|CP|K|M|"
-            r"COINS?|POINTS?|DIAMONDS?|GOLD|CASH|"
-            r"GIB|GB|CODE|CODES?)?\s*$",
-            "",
-            x,
-            flags=re.I
-        )
-
-        x=re.sub(
-            r"\s+(?:MANUAL|AUTOMATIC|AUTO|TR|يدوي|تلقائي)\s*$",
-            "",
-            x,
-            flags=re.I
-        )
-
-        x=re.sub(r"\s+[A-D]\s*$","",x,flags=re.I)
-        x=re.sub(r"^\s*CODE(?:S)?\s+","",x,flags=re.I)
-        x=re.sub(r"\s*[-:|]\s*$","",x)
-        x=re.sub(r"\s+"," ",x).strip()
-
-        return x or raw
+        return str(p.get("category_name") or "").strip()
 
     for pdt in products():
-        name=str(pdt.get("name") or "").strip()
-        if not name:
-            continue
-
-        sec=section_for(pdt)
-        if sec != section:
-            continue
-
-        if sec in ("other","excluded"):
+        if section_for(pdt)!=section:
             continue
 
         try:
@@ -343,15 +294,107 @@ def apps():
         except:
             continue
 
-        base=normalize(name)
-        key=re.sub(r"\s+"," ",base).strip().upper()
-
-        if not key:
+        if section=="live":
+            raw=str(pdt.get("category_name") or "").strip()
+            title=raw
+            # لا نخلط مجموعات الباقات المختلفة لنفس التطبيق
+            current_parent=pdt.get("parent_id")
+            upper=raw.upper()
+            canonical={
+                "BIGO":"BIGO LIVE","BIGO LIVE":"BIGO LIVE",
+                "MEYO":"MEYO","MEYO CHAT":"MEYO","MEYO LIVE":"MEYO",
+                "IMO":"IMO","IMO CHAT":"IMO",
+                "FALLA":"FALLA","FALLA CHAT":"FALLA",
+                "LIKEE":"LIKEE","LIKEE LIVE":"LIKEE","SAYA LIKEE":"LIKEE",
+                "TUMILE":"TUMILE","TUMILE LIVE":"TUMILE",
+                "HIGO":"HIGO","HIGO LIVE":"HIGO","HIGO CHAT":"HIGO",
+                "MIGO":"MIGO","MIGO LIVE":"MIGO","MIGO CHAT":"MIGO",
+                "LUDO DIAMONDS":"LUDO DIAMONDS",
+                "YALLA LIVE":"YALLA LIVE",
+                "POPPO LIVE":"POPPO","POPPO":"POPPO",
+                "NIMO TV":"NIMO TV","SUGO LITE":"SUGO LITE",
+                "TANGO LIVE":"TANGO LIVE","MANGO LIVE":"MANGO LIVE",
+                "PAWA LIVE":"PAWA LIVE","UPLIVE":"UPLIVE",
+                "AZAR":"AZAR","AZAR CHAT":"AZAR",
+                "HAGO":"HAGO","HAGO CHAT":"HAGO",
+                "LIVU":"LIVU","LEESKI":"LEESKI"
+            }
+            if upper in canonical:
+                title=canonical[upper]
+            excluded={
+                "قسم التطبيقات","WORLD OF APPLICATIONS","APPLICATION SHIPPING",
+                "APPS SECTION","APPLICATIONS","APLLICATIONS","APPLICATION NUMBERS",
+                "YALLA LUDO","YALLA LUDO GOLD","YALLA LUDO GOLD دهب",
+                "YALLA LUDO DIAMONDS","LUDO DIAMONDS","LUDO CLUB",
+                "LUDO CLUB COINS","LUDO CLUB CASH","LUDO WORLD",
+                "FARLIGHT 84","FARLIGHT","MOBILE LEGENDS"
+            }
+            if not title or upper in excluded:
+                continue
+            if title.strip().upper() in {"CHATGPT", "CHATGPT - GO", "CHATGPT GO", "CHAT APPLICATIONS"}:
+                continue
+            if not any(x in upper for x in (
+                "LIVE","CHAT","LIVU","BIGO","POPPO","TUMILE","YALLA",
+                "MEYO","SUGO","LIKEE","LEESKI","IMO","AZAR","HAGO",
+                "NIMO","MICO","HIGO","MIGO","YOYO","YOHO","TAMI",
+                "OOHLA","HEYA","FANCY","AYOME","WYAK","COCCO","FALLA",
+                "AHLAN","HABBY","KIYO","LIGO","LIGHT","NABD","TAKA",
+                "SABA","DIMO","ASWAT","LAMI","SPARTY","BEELA","BOBO",
+                "GOMEET","HAWA","SOULFA","TANGO","MANGO","PAWA","DANA",
+                "OPA","KITI","LADO","Laki","SAADA","HALLA","HATI","VILAA",
+                "UPLIVE","GAMET"
+            )):
+                continue
+        else:
+            title=app_name(pdt)
+            if not title:
+                continue
+        if section=="games" and title.strip().upper() in {"مكس يو","MIXU","FARM PASS"}:
             continue
+
+        # عرض FARM PASS ضمن باقات HAY DAY بدل إنشاء كرت مستقل
+        if section=="games" and "HAY DAY" in (
+            str(pdt.get("name") or "").upper() + " " +
+            str(pdt.get("category_name") or "").upper()
+        ):
+            title="HAY DAY"
+        if section=="stores" and title.strip().upper() in {"APPLICATIONS", "المتاجر الرقمية"}:
+            continue
+
+        if section=="telecom":
+            tn=str(pdt.get("name") or "").upper()
+            tc=str(pdt.get("category_name") or "").upper()
+            telecom_name=title.upper()
+            if telecom_name=="ALFA" and any(x in tn for x in ("MTC","MTN","SYRIATEL","FSN")):
+                continue
+            if telecom_name=="MTC" and any(x in tn for x in ("ALFA","MTN","SYRIATEL","FSN")):
+                continue
+            if telecom_name=="MTN" and any(x in tn for x in ("ALFA","MTC","SYRIATEL","FSN")):
+                continue
+            if telecom_name=="SYRIATEL" and any(x in tn for x in ("ALFA","MTC","MTN","FSN")):
+                continue
+            if telecom_name=="FSN" and any(x in tn for x in ("ALFA","MTC","MTN","SYRIATEL")):
+                continue
+
+        if section=="games":
+            bad={
+                "BERMUDA","GLOBAL PUBG","PUBG OTOMATIK","PUBG MANUAL",
+                "PUBG CODES","PUBG SERVER (1)","PUBG SERVER (2)","SERVER (3)",
+                "PUBG TR","PUBG TR التركية","PUBG عالمي اوتماتيك",
+                "TURKISH PUBG","ببجي عالمي","PUBG NEW STATE","PUBG MOBail | TR"
+            }
+            if title.upper() in bad:
+                continue
+
+        if section=="games" and "PUBG" in title.upper():
+            if title.upper()!="PUBG GLOBAL OTOMATIK":
+                continue
+            title="PUBG GLOBAL OTOMATIK"
+        key=title.upper()
 
         if key not in groups:
             groups[key]={
-                "name":base,
+                "name":title,
                 "image":image_of(pdt),
                 "parent_id":pdt.get("parent_id"),
                 "products":[],
@@ -360,20 +403,28 @@ def apps():
 
         g=groups[key]
 
-        if pid not in g["_seen"]:
-            g["_seen"].add(pid)
+        pname=str(pdt.get("name") or "").strip()
+        pkey="|".join([
+            " ".join(pname.upper().split()),
+            str(pdt.get("product_type") or "").upper().strip(),
+            "|".join(str(x).strip().upper() for x in (pdt.get("params") or []))
+        ])
+        if pkey not in g["_seen"]:
+            g["_seen"].add(pkey)
             g["products"].append({
                 "id":pid,
-                "name":name
+                "name":pname,
+                "parent_id":pdt.get("parent_id"),
+                "product_type":pdt.get("product_type"),
+                "params":pdt.get("params") or []
             })
 
         if not g["image"]:
-            img=image_of(pdt)
-            if img:
-                g["image"]=img
+            g["image"]=image_of(pdt)
 
-        if not g["parent_id"] and pdt.get("parent_id"):
-            g["parent_id"]=pdt.get("parent_id")
+    for g in groups.values():
+        if g["name"]=="PUBG MOBILE":
+            g["products"]=g["products"][-6:]
 
     result=[]
     for g in groups.values():
@@ -382,26 +433,13 @@ def apps():
             result.append(g)
 
     if section=="games":
-        order=[
-            "PUBG MOBILE","FREE FIRE","CALL OF DUTY MOBILE",
-            "8BALL POOL","BRAWL STARS","CLASH OF CLANS",
-            "HAY DAY","FARM PASS"
-        ]
-        result.sort(key=lambda x:(
-            order.index(x["name"]) if x["name"] in order else 999,
-            x["name"].upper()
-        ))
+        order=["PUBG GLOBAL OTOMATIK","PUBG GLOBAL","PUBG MOBILE","FREE FIRE","CALL OF DUTY MOBILE","8BALL POOL","BRAWL STARS","CLASH OF CLANS","HAY DAY","FARM PASS","WAR ROBOTS"]
     elif section=="live":
-        order=[
-            "YALLA LIVE","YALLA LUDO","LIVU","TUMILE",
-            "BIGO LIVE","POPPO","HAGO","MEYO","SUGO","STAR MAKER"
-        ]
-        result.sort(key=lambda x:(
-            order.index(x["name"]) if x["name"] in order else 999,
-            x["name"].upper()
-        ))
+        order=["YALLA LIVE","YALLA LUDO","LIVU","TUMILE","BIGO LIVE","POPPO","HAGO","MEYO","SUGO","STAR MAKER","LIKEE","LEESKI","IMO","LUDO"]
     else:
-        result.sort(key=lambda x:x["name"].upper())
+        order=[]
+
+    result.sort(key=lambda x:(order.index(x["name"].upper()) if x["name"].upper() in order else 999,x["name"].upper()))
 
     page=result[offset:offset+limit]
 
@@ -409,9 +447,9 @@ def apps():
         ok=True,
         apps=page,
         total=len(result),
-        offset=offset,
         limit=limit,
-        has_more=(offset+limit)<len(result)
+        offset=offset,
+        has_more=offset+limit<len(result)
     )
 
 @app.get("/api/app-packages")
