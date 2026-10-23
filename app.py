@@ -288,8 +288,29 @@ def apps():
         return ""
 
     def app_name(p):
-        text=(str(p.get("category_name") or "")+" "+str(p.get("name") or "")).upper()
-        for needle,title in aliases.items():
+        n = str(p.get("name") or "").strip().upper()
+        c = str(p.get("category_name") or "").strip().upper()
+
+        # فصل المنتجات الموجودة ضمن التصنيف المشترك MTC..ALFA
+        if "MTC..ALFA" in c:
+            if "ALFA" in n:
+                return "ALFA"
+            if "MTC" in n:
+                return "MTC"
+
+        # فصل المنتجات ضمن التصنيف المشترك MTN & Syriatel
+        if "MTN & SYRIATEL" in c:
+            if any(x in n for x in ("SYRIATEL", "سيريتل", "سيرياتل")):
+                return "SYRIATEL"
+            if any(x in n for x in ("MTN", "ام تي ان", "إم تي إن")):
+                return "MTN"
+            if "ASIACELL" in n:
+                return "ASIACELL"
+            if "ELUX" in n:
+                return "ELUX"
+
+        text = c + " " + n
+        for needle, title in aliases.items():
             if needle in text:
                 return title
         return str(p.get("category_name") or "").strip()
@@ -359,35 +380,16 @@ def apps():
             )):
                 continue
         else:
-            title=app_name(pdt)
+            if section=="telecom":
+                title=str(pdt.get("category_name") or pdt.get("category") or "").strip()
+            else:
+                title=app_name(pdt)
             if not title:
                 continue
-        if section=="games" and title.strip().upper() in {"مكس يو","MIXU","FARM PASS"}:
+        if section=="games" and title.strip().upper() in {"مكس يو","MIXU"}:
             continue
-
-        # عرض FARM PASS ضمن باقات HAY DAY بدل إنشاء كرت مستقل
-        if section=="games" and "HAY DAY" in (
-            str(pdt.get("name") or "").upper() + " " +
-            str(pdt.get("category_name") or "").upper()
-        ):
-            title="HAY DAY"
         if section=="stores" and title.strip().upper() in {"APPLICATIONS", "المتاجر الرقمية"}:
             continue
-
-        if section=="telecom":
-            tn=str(pdt.get("name") or "").upper()
-            tc=str(pdt.get("category_name") or "").upper()
-            telecom_name=title.upper()
-            if telecom_name=="ALFA" and any(x in tn for x in ("MTC","MTN","SYRIATEL","FSN")):
-                continue
-            if telecom_name=="MTC" and any(x in tn for x in ("ALFA","MTN","SYRIATEL","FSN")):
-                continue
-            if telecom_name=="MTN" and any(x in tn for x in ("ALFA","MTC","SYRIATEL","FSN")):
-                continue
-            if telecom_name=="SYRIATEL" and any(x in tn for x in ("ALFA","MTC","MTN","FSN")):
-                continue
-            if telecom_name=="FSN" and any(x in tn for x in ("ALFA","MTC","MTN","SYRIATEL")):
-                continue
 
         if section=="games":
             bad={
@@ -405,7 +407,10 @@ def apps():
             title="PUBG GLOBAL OTOMATIK"
         title_key = " ".join(title.upper().split())
         display_title = title
-        key = title_key
+        source_category = " ".join(
+            str(pdt.get("category_name") or pdt.get("category") or "").upper().split()
+        )
+        key = title_key + "||" + source_category
 
         if key not in groups:
             groups[key]={
@@ -543,7 +548,7 @@ def api_products():
 def order():
  u=user()
  if not u:return jsonify(ok=False,message="يجب تسجيل الدخول"),401
- d=request.json or {};pid=int(d.get("product_id",0));qty=max(1,int(d.get("quantity",1)));player=str(d.get("player_id","")).strip()
+ d=request.json or {};pid=int(d.get("product_id",0));qty=max(1,int(d.get("qty",d.get("quantity",1))));player=str(d.get("playerId",d.get("player_id",""))).strip()
  p=next((x for x in products() if int(x.get("id",-1))==pid),None)
  if not p:return jsonify(ok=False,message="الباقة غير موجودة"),404
  total=price(p)*qty
