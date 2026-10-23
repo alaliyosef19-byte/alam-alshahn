@@ -4,167 +4,65 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>عالم الشحن</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0d0920;color:#fff;font-family:Arial,sans-serif;padding-bottom:82px}
-.top{padding:14px 15px;background:#17102f;border-bottom:1px solid #35205f;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.logo{font-size:21px;font-weight:900;color:#b995ff}
-.balance{background:#24164a;border:1px solid #6846a8;border-radius:12px;padding:8px 12px;font-weight:bold}
-.login{background:#7c3aed;color:#fff;border:0;border-radius:10px;padding:9px 13px;font-weight:bold}
-.container{padding:18px 14px}
-h1{font-size:23px;margin:8px 0}
-.sub{color:#aaa;margin-bottom:18px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.card{background:#17112d;border:1px solid #34215b;border-radius:16px;padding:18px 10px;text-align:center;min-height:125px}
-.icon{font-size:38px;margin-bottom:9px}
-.card b{display:block;font-size:15px}
-.card button,.package button{margin-top:12px;background:#7c3aed;color:#fff;border:0;border-radius:10px;padding:9px 13px;font-weight:bold}
+:root{--pink:#f43f72;--red:#ef4444;--pale:#fff0f4;--ink:#29232b;--muted:#88818a;--line:#f2e5e9}
+body{margin:0;background:#fff;color:var(--ink);font-family:Arial,sans-serif;padding-bottom:82px}
+.top{padding:14px 15px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:9px;position:sticky;top:0;z-index:100}
+.logo{font-size:20px;font-weight:900;color:var(--pink)}
+.balance{background:var(--pale);border:1px solid #ffd0dc;border-radius:12px;padding:8px 10px;font-weight:bold;color:#d92e60}
+.login{background:var(--pink);color:#fff;border:0;border-radius:11px;padding:10px 12px;font-weight:bold}
+.container{padding:16px 12px}
+h1{font-size:22px;margin:8px 0;color:#29232b}
+.sub{color:var(--muted);margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.grid .card{min-width:0;padding:12px 3px;min-height:100px;border-radius:13px}.grid .icon{font-size:27px;margin-bottom:7px}.grid .card b{font-size:12px;line-height:1.5}.grid .card button{font-size:10px;padding:7px 3px;width:100%;white-space:normal}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px 8px;text-align:center;min-height:112px;box-shadow:0 3px 12px #6e24300a}
+.icon{font-size:34px;margin-bottom:8px}
+.card b{display:block;font-size:14px}
+.card button,.package button{margin-top:10px;background:var(--pink);color:#fff;border:0;border-radius:10px;padding:9px 12px;font-weight:bold}
 .hidden{display:none!important}
-.back{background:#24164a;border:1px solid #4a3278;color:#fff;border-radius:10px;padding:9px 14px;margin-bottom:15px}
-.items{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.package{background:#17112d;border:1px solid #34215b;border-radius:15px;padding:14px}
-.package .price{color:#b995ff;font-size:18px;font-weight:bold;margin-top:8px}
-.bottom{position:fixed;z-index:9999;bottom:0;left:0;right:0;height:68px;background:#17102f;border-top:1px solid #49317a;display:flex;justify-content:space-around;align-items:center}
-.bottom button{background:none;border:0;color:#fff;font-size:12px;display:flex;flex-direction:column;gap:4px;align-items:center}
+.back{background:var(--pale);border:1px solid #ffd0dc;color:#c72c59;border-radius:10px;padding:9px 14px;margin-bottom:15px}
+.items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.package{background:#fff;border:1px solid var(--line);border-radius:15px;padding:12px;box-shadow:0 3px 12px #6e243008}
+.package .price{color:var(--pink);font-size:18px;font-weight:bold;margin-top:8px}
+.bottom{position:fixed;z-index:9999;bottom:0;left:0;right:0;height:68px;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;align-items:center;box-shadow:0 -4px 18px #41202a0a}
+.bottom button{background:none;border:0;color:#77717a;font-size:12px;display:flex;flex-direction:column;gap:4px;align-items:center;padding:7px 4px}
+.bottom button:active,.bottom button.active{color:var(--pink)}
 .bottom span{font-size:21px}
-.modal{position:fixed;inset:0;background:#000b;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px}
-.box{width:100%;max-width:430px;background:#17112d;border:1px solid #5a3b91;border-radius:18px;padding:20px}
-.box input,.box textarea{width:100%;margin:7px 0;padding:12px;border-radius:10px;border:1px solid #49316f;background:#0e0920;color:#fff}
-.box button{padding:11px 15px;border:0;border-radius:10px;background:#7c3aed;color:#fff;font-weight:bold;margin-top:8px}
-.close{float:left;background:#332052!important}
-.sham{background:#24164a;border:1px solid #6544a2;border-radius:12px;padding:13px;line-height:2}
-@media(min-width:700px){.grid{grid-template-columns:repeat(5,1fr)}.items{grid-template-columns:repeat(3,1fr)}}
-
-.app-image{
-  width:100%;
-  height:150px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  border-radius:14px;
-  margin-bottom:10px;
-  background:rgba(255,255,255,.05);
-}
-.app-image img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-.no-image{
-  font-size:42px;
-  opacity:.5;
-}
-
-.app-card{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:12px;
-  margin:10px 0;
-  border-radius:18px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  box-sizing:border-box;
-  overflow:hidden;
-}
-.app-card b{
-  display:block;
-  text-align:center;
-  font-size:16px;
-  line-height:1.4;
-}
-.app-card button{
-  width:100%;
-  border:0;
-  border-radius:12px;
-  padding:11px 14px;
-  cursor:pointer;
-}
-.telecom-card{
-  background:linear-gradient(145deg,#1d1438,#120c27);
-  border:1px solid #49317a;
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:0 8px 25px #0005;
-  cursor:pointer;
-  transition:.2s;
-}
+.modal{position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px}
+.box{width:100%;max-width:430px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;color:var(--ink)}
+.box input,.box textarea{width:100%;margin:7px 0;padding:12px;border-radius:10px;border:1px solid #eadde2;background:#fff;color:var(--ink)}
+.box button{padding:11px 15px;border:0;border-radius:10px;background:var(--pink);color:#fff;font-weight:bold;margin-top:8px}
+.close{float:left;background:#756b74!important}
+.sham{background:#fff5f7;border:1px solid #ffd0dc;border-radius:12px;padding:13px;line-height:2;color:#51434a}
+.app-image{width:100%;height:130px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:13px;margin-bottom:10px;background:#fff3f6}
+.app-image img{width:100%;height:100%;object-fit:contain;display:block}
+.no-image{font-size:42px;opacity:.5}
+.app-card{display:flex;flex-direction:column;gap:10px;padding:10px;margin:0;border-radius:16px;background:#fff;border:1px solid var(--line);box-sizing:border-box;overflow:hidden;box-shadow:0 3px 14px #6e24300a}
+.app-card b{display:block;text-align:center;font-size:14px;line-height:1.5;color:var(--ink)}
+.app-card button{width:100%;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;background:var(--pink);color:#fff;font-weight:bold}
+.telecom-card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 4px 15px #6e24300d;cursor:pointer;transition:.2s}
 .telecom-card:active{transform:scale(.98)}
-.telecom-card .app-image{
-  height:155px;
-  margin:0;
-  border-radius:0;
-}
-.telecom-card .telecom-name{
-  padding:13px 12px 12px;
-  text-align:center;
-  font-weight:900;
-  font-size:16px;
-}
-.telecom-packages{
-  display:none;
-  grid-column:1/-1;
-  background:#120c27;
-  border:1px solid #49317a;
-  border-radius:15px;
-  padding:12px;
-  margin-top:-5px;
-}
+.telecom-card .app-image{height:120px;margin:0;border-radius:0;background:#fff3f6}
+.telecom-card .telecom-name{padding:12px 8px;text-align:center;font-weight:900;font-size:14px;color:var(--ink)}
+.telecom-packages{display:none;grid-column:1/-1;background:#fff7f9;border:1px solid var(--line);border-radius:15px;padding:12px;margin-top:-5px}
 .telecom-packages.open{display:block}
-.telecom-package{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  background:#1b1233;
-  border:1px solid #35215b;
-  border-radius:12px;
-  padding:11px;
-  margin-bottom:8px;
-}
+.telecom-package{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px;margin-bottom:8px}
 .telecom-package:last-child{margin-bottom:0}
 .telecom-package .tp-info{min-width:0}
-.telecom-package .tp-name{
-  font-weight:bold;
-  line-height:1.5;
-}
-.telecom-package .tp-price{
-  color:#b995ff;
-  font-weight:900;
-  margin-top:3px;
-}
-.telecom-package button{
-  flex-shrink:0;
-  background:#7c3aed;
-  color:#fff;
-  border:0;
-  border-radius:9px;
-  padding:8px 11px;
-  font-weight:bold;
-}
-.app-image{
-  width:100%;
-  height:150px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  overflow:hidden;
-  border-radius:14px;
-  background:rgba(255,255,255,.05);
-}
-.app-image img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-}
-.no-image{
-  font-size:42px;
-  opacity:.5;
-}
+.telecom-package .tp-name{font-weight:bold;line-height:1.5}
+.telecom-package .tp-price{color:var(--pink);font-weight:900;margin-top:3px}
+.telecom-package button{flex-shrink:0;background:var(--pink);color:#fff;border:0;border-radius:9px;padding:8px 11px;font-weight:bold}
+@media(max-width:360px){.grid{gap:4px}.grid .icon{font-size:24px}.grid .card b{font-size:11px}.grid .card button{font-size:9px;padding:7px 1px}.top{padding:11px 8px}.logo{font-size:17px}.balance{font-size:12px;padding:7px}.login{padding:8px;font-size:12px}}
+@media(min-width:700px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}.items{grid-template-columns:repeat(4,minmax(0,1fr))}.container{max-width:1100px;margin:auto}}
+
+.search-wrap{display:flex;align-items:center;gap:10px;margin:14px 12px;padding:12px 14px;background:#fff2f5;border:1px solid #ffd4df;border-radius:14px;color:#f43f72}
+.search-wrap span{font-size:20px}
+.search-wrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#29232b;font-size:15px}
+.search-wrap input::placeholder{color:#a69aa0}
 </style>
+
 </head>
 <body>
 
@@ -178,6 +76,12 @@ h1{font-size:23px;margin:8px 0}
 <button id="logoutBtn" class="login hidden" onclick="logout()">تسجيل الخروج</button>
 <button id="adminBtn" class="login hidden" onclick="openAdmin()">⚙️ الإدارة</button>
 </header>
+
+<div class="search-wrap">
+  <span>🔎</span>
+  <input id="siteSearch" type="search" placeholder="ابحث عن لعبة أو تطبيق..." autocomplete="off">
+</div>
+
 
 <main class="container">
 
@@ -736,6 +640,17 @@ async function depositAction(id,action){
 
 showHome();
 loadBalance();
+
+document.addEventListener("DOMContentLoaded",function(){
+  const input=document.getElementById("siteSearch");
+  if(!input)return;
+  input.addEventListener("input",function(){
+    const q=input.value.trim().toLocaleLowerCase();
+    document.querySelectorAll("#apps .app-card,#apps .telecom-card,#apps .card").forEach(function(card){
+      card.style.display=(!q||card.innerText.toLocaleLowerCase().includes(q))?"":"none";
+    });
+  });
+});
 </script>
 </body>
 </html>
